@@ -9,9 +9,17 @@ import SwiftUI
 
 @main
 struct CookLoopApp: App {
+    @StateObject var viewModel = AuthViewModel()
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if viewModel.userSession != nil {
+                ContentView() // will add later
+                    .environmentObject(viewModel)
+            } else {
+                LoginView()
+                    .environmentObject(viewModel)
+            }
         }
     }
 }

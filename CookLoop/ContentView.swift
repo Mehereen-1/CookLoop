@@ -7,9 +7,10 @@
 
 import SwiftUI
 
-import SwiftUI
-
 struct ContentView: View {
+    @EnvironmentObject var authViewModel: AuthViewModel
+    @StateObject private var bookmarkViewModel = BookmarkViewModel()
+
     var body: some View {
         TabView {
             FeedView()
@@ -18,25 +19,33 @@ struct ContentView: View {
                     Text("Feed")
                 }
 
-            DiscoverView()
-                .tabItem {
-                    Image(systemName: "magnifyingglass")
-                    Text("Discover")
-                }
-
             UploadView()
                 .tabItem {
                     Image(systemName: "plus.circle.fill")
                     Text("Upload")
                 }
 
-            ProfileView()
-                .tabItem {
-                    Image(systemName: "person.fill")
-                    Text("Profile")
+            Group {
+                if let currentUserId = authViewModel.currentUser?.id {
+                    ProfileView(userId: currentUserId)
+                } else {
+                    Text("Loading profile...")
                 }
+            }
+            .tabItem {
+                Image(systemName: "person.fill")
+                Text("Profile")
+            }
         }
         .accentColor(.orange)
+        .environmentObject(bookmarkViewModel)
+        .onAppear {
+            if authViewModel.currentUser == nil {
+                authViewModel.fetchUser()
+            }
+
+            bookmarkViewModel.startListening()
+        }
     }
 }
 
