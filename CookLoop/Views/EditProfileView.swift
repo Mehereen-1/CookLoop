@@ -8,13 +8,39 @@
 import SwiftUI
 
 struct EditProfileView: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
-    }
-}
+    @ObservedObject var viewModel: ProfileViewModel
+    @Environment(\.presentationMode) var presentationMode
 
-struct EditProfileView_Previews: PreviewProvider {
-    static var previews: some View {
-        EditProfileView()
+    @State private var name = ""
+    @State private var bio = ""
+
+    var body: some View {
+        VStack(spacing: 20) {
+
+            Text("Edit Profile")
+                .font(.title)
+                .fontWeight(.bold)
+
+            TextField("Name", text: $name)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+
+            TextField("Bio", text: $bio)
+                .textFieldStyle(RoundedBorderTextFieldStyle())
+
+            Button("Save") {
+                viewModel.updateProfile(name: name, bio: bio)
+                presentationMode.wrappedValue.dismiss()
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Color.orange)
+            .foregroundColor(.white)
+            .cornerRadius(10)
+        }
+        .padding()
+        .onAppear {
+            name = viewModel.user?.name ?? ""
+            bio = viewModel.user?.bio ?? ""
+        }
     }
 }
