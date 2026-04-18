@@ -11,7 +11,7 @@ import FirebaseFirestore
 
 class BookmarkViewModel: ObservableObject {
     @Published var savedRecipeIds: Set<String> = []
-    @Published var savedRecipes: [Recipe] = []
+    @Published var savedRecipes: [CookLoop.Recipe] = []
     @Published var errorMessage: String = ""
 
     private let db = Firestore.firestore()
@@ -57,7 +57,7 @@ class BookmarkViewModel: ObservableObject {
         savedRecipeIds.contains(recipeId)
     }
 
-    func toggleSaved(recipe: Recipe) {
+    func toggleSaved(recipe: CookLoop.Recipe) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
 
         if isSaved(recipeId: recipe.id) {
@@ -83,6 +83,8 @@ class BookmarkViewModel: ObservableObject {
                 if let error = error {
                     self.savedRecipeIds.remove(recipeId)
                     self.errorMessage = error.localizedDescription
+                } else {
+                    GamificationService.shared.awardBookmark(userId: uid)
                 }
             }
         }
@@ -114,7 +116,7 @@ class BookmarkViewModel: ObservableObject {
 
         let orderMap = Dictionary(uniqueKeysWithValues: recipeIdsInOrder.enumerated().map { ($0.element, $0.offset) })
         let chunks = recipeIdsInOrder.chunked(into: 10)
-        var allRecipes: [Recipe] = []
+        var allRecipes: [CookLoop.Recipe] = []
         let group = DispatchGroup()
 
         for chunk in chunks where !chunk.isEmpty {

@@ -10,14 +10,14 @@ import FirebaseAuth
 import FirebaseFirestore
 
 class RecipeDetailViewModel: ObservableObject {
-    @Published var recipe: Recipe
+    @Published var recipe: CookLoop.Recipe
     @Published var isLiked: Bool = false
     @Published var creatorName: String = "Cook"
     @Published var errorMessage: String = ""
 
     private let db = Firestore.firestore()
 
-    init(recipe: Recipe) {
+    init(recipe: CookLoop.Recipe) {
         self.recipe = recipe
     }
 
@@ -61,8 +61,32 @@ class RecipeDetailViewModel: ObservableObject {
                     self.isLiked = !alreadyLiked
                     let delta = alreadyLiked ? -1 : 1
                     self.recipe.likes = max(0, self.recipe.likes + delta)
+
+                    if !alreadyLiked {
+                        if self.recipe.userId != uid {
+                            GamificationService.shared.awardLikeReceived(userId: self.recipe.userId)
+                        }
+
+                        self.sendLikeNotification(actorUserId: uid)
+                    }
                 }
             }
+        }
+    }
+
+    private func sendLikeNotification(actorUserId: String) {
+        db.collection("users").document(actorUserId).getDocument { snapshot, _ in
+            let fetchedName = snapshot?.data()?["name"] as? String
+            let actorName = fetchedName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+            NotificationService.shared.send(
+                to: self.recipe.userId,
+                actorUserId: actorUserId,
+                actorName: actorName.isEmpty ? "Cook" : actorName,
+                type: .like,
+                recipeId: self.recipe.id,
+                text: nil
+            )
         }
     }
 

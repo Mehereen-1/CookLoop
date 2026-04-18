@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 
 struct RecipeGridItem: View {
-    var recipe: Recipe
+    var recipe: CookLoop.Recipe
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {

@@ -17,4 +17,7 @@ struct Recipe: Identifiable, Codable {
     var steps: [String]
     var likes: Int
     var createdAt: Date
+    var cookingTimeMinutes: Int = 30
+    var difficulty: String = "Intermediate"
+    var tags: [String] = []
 }

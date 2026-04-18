@@ -14,7 +14,18 @@ final class ImageLoader: ObservableObject {
     private static let cache = NSCache<NSString, UIImage>()
 
     func load(from urlString: String) {
-        guard !urlString.isEmpty, let url = URL(string: urlString) else {
+        guard !urlString.isEmpty else {
+            image = nil
+            return
+        }
+
+        if let dataURLImage = imageFromDataURL(urlString) {
+            image = dataURLImage
+            Self.cache.setObject(dataURLImage, forKey: urlString as NSString)
+            return
+        }
+
+        guard let url = URL(string: urlString) else {
             image = nil
             return
         }
@@ -33,6 +44,15 @@ final class ImageLoader: ObservableObject {
             }
         }.resume()
     }
+
+    private func imageFromDataURL(_ value: String) -> UIImage? {
+        guard value.hasPrefix("data:image") else { return nil }
+        guard let commaIndex = value.firstIndex(of: ",") else { return nil }
+
+        let base64Part = String(value[value.index(after: commaIndex)...])
+        guard let data = Data(base64Encoded: base64Part) else { return nil }
+        return UIImage(data: data)
+    }
 }
 
 struct RemoteImageView: View {
@@ -49,7 +69,7 @@ struct RemoteImageView: View {
                 ZStack {
                     Rectangle()
                         .fill(Color.orange.opacity(0.12))
-                    Image(systemName: "fork.knife.circle")
+                    Image(systemName: "flame.fill")
                         .font(.system(size: 28, weight: .regular))
                         .foregroundColor(Color.orange.opacity(0.6))
                 }
