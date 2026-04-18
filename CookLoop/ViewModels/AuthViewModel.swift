@@ -24,18 +24,35 @@ class AuthViewModel: ObservableObject {
     // MARK: - Login
     func login(email: String, password: String) {
         isLoading = true
+        errorMessage = ""
 
         manager.auth.signIn(withEmail: email, password: password) { result, error in
             DispatchQueue.main.async {
-                self.isLoading = false
-
                 if let error = error {
+                    self.isLoading = false
                     self.errorMessage = error.localizedDescription
                     return
                 }
 
                 self.userSession = result?.user
-                self.fetchUser()
+                self.fetchUser { user in
+                    DispatchQueue.main.async {
+                        self.isLoading = false
+
+                        guard let user = user else {
+                            self.errorMessage = "Unable to load account details."
+                            return
+                        }
+
+                        if user.isBanned {
+                            self.errorMessage = "Your account has been banned. Please contact support."
+                            self.forceLogoutForAccessViolation()
+                            return
+                        }
+
+                        GamificationService.shared.runWeeklyCalculation()
+                    }
+                }
             }
         }
     }
@@ -60,7 +77,12 @@ class AuthViewModel: ObservableObject {
                     name: name,
                     email: email,
                     profileImage: nil,
-                    bio: ""
+                    bio: "",
+                    isAdmin: false,
+                    isBanned: false,
+                    xp: 0,
+                    level: "Beginner Cook",
+                    badges: []
                 )
 
                 do {
@@ -71,20 +93,38 @@ class AuthViewModel: ObservableObject {
                             "name": newUser.name,
                             "email": newUser.email,
                             "profileImage": newUser.profileImage ?? "",
-                            "bio": newUser.bio ?? ""
+                            "bio": newUser.bio ?? "",
+                            "isAdmin": newUser.isAdmin,
+                            "isBanned": newUser.isBanned,
+                            "xp": newUser.xp,
+                            "level": newUser.level,
+                            "badges": newUser.badges,
+                            "totalRecipesPosted": 0,
+                            "totalLikesReceived": 0,
+                            "totalComments": 0,
+                            "totalBookmarks": 0
                         ])
                     self.userSession = user
                     self.currentUser = newUser
+                    GamificationService.shared.runWeeklyCalculation()
                 }
             }
         }
     }
 
     // MARK: - Fetch User
-    func fetchUser() {
+    func fetchUser(completion: ((User?) -> Void)? = nil) {
         guard let uid = manager.auth.currentUser?.uid else { return }
 
         manager.firestore.collection("users").document(uid).getDocument { snapshot, error in
+            if let error = error {
+                DispatchQueue.main.async {
+                    self.errorMessage = error.localizedDescription
+                    completion?(nil)
+                }
+                return
+            }
+
             if let data = snapshot?.data() {
                 do {
                     let user = User(
@@ -92,18 +132,57 @@ class AuthViewModel: ObservableObject {
                         name: data["name"] as? String ?? "",
                         email: data["email"] as? String ?? "",
                         profileImage: data["profileImage"] as? String,
-                        bio: data["bio"] as? String
+                        bio: data["bio"] as? String,
+                        isAdmin: data["isAdmin"] as? Bool ?? false,
+                        isBanned: data["isBanned"] as? Bool ?? false,
+                        xp: Self.parseInt(data["xp"]) ?? 0,
+                        level: data["level"] as? String ?? "Beginner Cook",
+                        badges: data["badges"] as? [String] ?? []
                     )
                     DispatchQueue.main.async {
+                        if user.isBanned {
+                            self.errorMessage = "Your account has been banned. Please contact support."
+                            self.forceLogoutForAccessViolation()
+                            completion?(nil)
+                            return
+                        }
+
                         self.currentUser = user
+                        completion?(user)
                     }
-                } 
+                }
+            } else {
+                DispatchQueue.main.async {
+                    completion?(nil)
+                }
             }
         }
     }
 
     // MARK: - Logout
     func signOut() {
+        try? manager.auth.signOut()
+        self.userSession = nil
+        self.currentUser = nil
+    }
+
+    private static func parseInt(_ value: Any?) -> Int? {
+        if let intValue = value as? Int {
+            return intValue
+        }
+
+        if let int64Value = value as? Int64 {
+            return Int(int64Value)
+        }
+
+        if let doubleValue = value as? Double {
+            return Int(doubleValue)
+        }
+
+        return nil
+    }
+
+    private func forceLogoutForAccessViolation() {
         try? manager.auth.signOut()
         self.userSession = nil
         self.currentUser = nil

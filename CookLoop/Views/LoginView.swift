@@ -11,51 +11,90 @@ struct LoginView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var showSignup = false
+    @State private var showSearch = false
 
     @EnvironmentObject var viewModel: AuthViewModel
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
+            ZStack {
+                Color.appBackground.ignoresSafeArea()
 
-                Text("CookLoop 🍲")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
+                        AppTopBar(subtitle: "Welcome back to your kitchen story", onTrailingTap: { showSearch = true })
+                            .padding(.top, 10)
 
-                TextField("Email", text: $email)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                        VStack(spacing: 14) {
+                            TextField("Email", text: $email)
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                                .background(Color.surfaceContainerLowest)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
 
-                SecureField("Password", text: $password)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                            SecureField("Password", text: $password)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                                .background(Color.surfaceContainerLowest)
+                                .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
 
-                if viewModel.isLoading {
-                    ProgressView()
-                }
+                        Button(action: {
+                            viewModel.login(email: email, password: password)
+                        }) {
+                            HStack {
+                                if viewModel.isLoading {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .onPrimary))
+                                }
 
-                Button("Login") {
-                    viewModel.login(email: email, password: password)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(Color.orange)
-                .foregroundColor(.white)
-                .cornerRadius(10)
+                                Text("Login")
+                                    .font(.system(size: 16, weight: .bold, design: .rounded))
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .foregroundColor(.onPrimary)
+                            .background(Color.primaryBrand)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                        }
+                        .disabled(viewModel.isLoading)
 
-                if !viewModel.errorMessage.isEmpty {
-                    Text(viewModel.errorMessage)
-                        .foregroundColor(.red)
-                }
+                        if !viewModel.errorMessage.isEmpty {
+                            Text(viewModel.errorMessage)
+                                .font(.footnote)
+                                .foregroundColor(.red)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                        }
 
-                Button("Don't have an account? Sign Up") {
-                    showSignup = true
-                }
-                .sheet(isPresented: $showSignup) {
-                    SignupView()
-                        .environmentObject(viewModel)
+                        Button("Don't have an account? Sign Up") {
+                            showSignup = true
+                        }
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.primaryBrand)
+                    }
+                    .padding(20)
+                    .background(Color.surfaceContainerLow)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 28)
+                            .stroke(Color.outlineVariant.opacity(0.35), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 24)
                 }
             }
-            .padding()
+            .navigationBarHidden(true)
+            .sheet(isPresented: $showSignup) {
+                SignupView()
+                    .environmentObject(viewModel)
+            }
+            .sheet(isPresented: $showSearch) {
+                SearchRecipesSheet()
+            }
         }
+        .navigationViewStyle(StackNavigationViewStyle())
     }
 }
 

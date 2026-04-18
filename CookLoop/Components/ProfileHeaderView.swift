@@ -10,29 +10,80 @@ import SwiftUI
 struct ProfileHeaderView: View {
     let name: String
     let bio: String
+    let recipeCount: Int
+    let savedCount: Int
+    let showingSaved: Bool
 
     var body: some View {
-        VStack(spacing: 10) {
-            Circle()
-                .fill(Color.orange.opacity(0.18))
-                .frame(width: 84, height: 84)
-                .overlay(
-                    Image(systemName: "person.fill")
-                        .font(.system(size: 30))
-                        .foregroundColor(.orange)
-                )
+        VStack(spacing: 14) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.secondaryContainer, Color.tertiaryContainer]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(height: 110)
 
-            Text(name)
-                .font(.title3)
-                .fontWeight(.bold)
+                HStack(spacing: 12) {
+                    Circle()
+                        .fill(Color.surfaceContainerLowest.opacity(0.9))
+                        .frame(width: 64, height: 64)
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.primaryBrand)
+                        )
+
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(name)
+                            .font(.system(size: 22, weight: .heavy, design: .rounded))
+                            .foregroundColor(.onSurface)
+                            .lineLimit(1)
+
+                        Text(showingSaved ? "Saved Collection" : "Recipe Collection")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.onSurfaceVariant)
+                    }
+
+                    Spacer()
+                }
+                .padding(.horizontal, 14)
+            }
 
             Text(bio.isEmpty ? "Food lover at CookLoop" : bio)
                 .font(.subheadline)
-                .foregroundColor(.secondary)
+                .foregroundColor(.onSurfaceVariant)
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 20)
+                .padding(.horizontal, 10)
+
+            HStack(spacing: 10) {
+                statBadge(title: "Recipes", value: recipeCount)
+                statBadge(title: "Saved", value: savedCount)
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 8)
+        .padding(.top, 2)
+    }
+
+    private func statBadge(title: String, value: Int) -> some View {
+        VStack(spacing: 2) {
+            Text("\(value)")
+                .font(.headline)
+                .foregroundColor(.onSurface)
+            Text(title)
+                .font(.caption2)
+                .foregroundColor(.onSurfaceVariant)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 8)
+        .background(Color.surfaceContainerLowest)
+        .clipShape(RoundedRectangle(cornerRadius: 14))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14)
+                .stroke(Color.outlineVariant.opacity(0.35), lineWidth: 1)
+        )
     }
 }
