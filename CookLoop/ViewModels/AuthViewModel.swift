@@ -45,7 +45,7 @@ class AuthViewModel: ObservableObject {
                         }
 
                         if user.isBanned {
-                            self.errorMessage = "Your account has been banned. Please contact support."
+                            self.errorMessage = "Your account has been banned.. Please contact support."
                             self.forceLogoutForAccessViolation()
                             return
                         }

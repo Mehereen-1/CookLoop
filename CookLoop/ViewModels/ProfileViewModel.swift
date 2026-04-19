@@ -88,7 +88,7 @@ class ProfileViewModel: ObservableObject {
 
         db.collection("users").document(uid).updateData(payload) { error in
             if let error = error {
-                print("Error updating profile:", error.localizedDescription)
+                print("Error updating profile :", error.localizedDescription)
                 DispatchQueue.main.async {
                     completion?(false, error.localizedDescription)
                 }

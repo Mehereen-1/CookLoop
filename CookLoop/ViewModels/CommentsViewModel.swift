@@ -79,7 +79,7 @@ class CommentsViewModel: ObservableObject {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedText.isEmpty else { return }
         guard let uid = Auth.auth().currentUser?.uid else {
-            errorMessage = "Please log in to comment."
+            errorMessage = "Please log in to comment.."
             completion?(false)
             return
         }

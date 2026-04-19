@@ -1,7 +1,6 @@
 //
 //  RecipeDetailViewModel.swift
 //  CookLoop
-//
 //  Created by GitHub Copilot on 7/4/26.
 //
 

@@ -11,7 +11,7 @@ import FirebaseFirestore
 
 final class ActivityViewModel: ObservableObject {
     @Published var notifications: [ActivityNotification] = []
-    @Published var errorMessage: String = ""
+    @Published var errorMessage: String = " "
 
     private let db = Firestore.firestore()
     private var listener: ListenerRegistration?

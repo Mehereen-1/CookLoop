@@ -18,7 +18,7 @@ final class DiscoverViewModel: ObservableObject {
 
         guard let url = components?.url else {
             DispatchQueue.main.async {
-                self.errorMessage = "Invalid API URL."
+                self.errorMessage = "Invalid API URL.."
             }
             return
         }

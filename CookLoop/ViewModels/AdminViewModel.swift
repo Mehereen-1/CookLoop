@@ -234,7 +234,7 @@ final class AdminViewModel: ObservableObject {
 						id: doc.documentID,
 						type: data["type"] as? String ?? "unknown",
 						targetId: data["targetId"] as? String ?? "",
-						reason: data["reason"] as? String ?? "No reason provided",
+						reason: data["reason"] as? String ?? "No reasons provided",
 						reportedBy: data["reportedBy"] as? String ?? "",
 						createdAt: (data["createdAt"] as? Timestamp)?.dateValue() ?? Date(),
 						status: data["status"] as? String ?? "pending"
